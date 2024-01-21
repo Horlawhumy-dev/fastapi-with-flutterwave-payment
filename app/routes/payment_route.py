@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.orm import Session
@@ -31,7 +32,7 @@ async def charge_user_card(charge_details: PaymentCharge, db: Session = Depends(
 
 
 
-@payment_router.post('/validate', status_code=status.HTTP_201_CREATED, tags=['Payment Validate'])
+@payment_router.post('/validate', status_code=status.HTTP_201_CREATED, tags=['Payment validation with flutterwave transaction reference from charge response and otp from email'])
 async def validate_user_payment(validate_data: PaymentValidate, db: Session = Depends(get_db)):
     json_validate_data = validate_serializer(validate_data)
     response = PaymentUtil.make_validate_request(json_validate_data)
@@ -49,3 +50,8 @@ async def validate_user_payment(validate_data: PaymentValidate, db: Session = De
             logging.info(f"User {data['email']} is not credited")
     
     return  response.json()
+
+
+@payment_router.post('/verify', status_code=status.HTTP_201_CREATED, tags=['Payment verification success with id from validation response'])
+async def verify_user_payment(trasanction_id: str):
+    return PaymentUtil.make_verification_request(trasanction_id)
