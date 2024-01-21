@@ -15,7 +15,7 @@ from fastapi import HTTPException
 
 payment_router = APIRouter(prefix='/api/v1/payment')
 
-@payment_router.post('/charge', status_code=status.HTTP_201_CREATED, tags=['Payment Charge Card'])
+@payment_router.post('/charge', status_code=status.HTTP_201_CREATED, tags=['Payment charge card with otp sent to email'])
 async def charge_user_card(charge_details: PaymentCharge, db: Session = Depends(get_db)):
     json_payment_details = charge_card_seriliazer(charge_details)
     email = json_payment_details.get("email")

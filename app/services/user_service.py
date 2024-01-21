@@ -53,9 +53,8 @@ class UserService:
                 db.commit()
                 db.refresh(user)
                 return True
-            else:
-                return False
 
         except NoResultFound:
+            db.rollback()
             return False
 

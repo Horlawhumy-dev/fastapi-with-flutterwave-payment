@@ -11,6 +11,7 @@ from app.routes.profile_route import profile_router
 from app.routes.payment_route import payment_router
 from app.routes.card_route import card_router
 from app.routes.user_route import user_router
+from app.routes.payout_route import payout_router
 
 
 app = FastAPI(
@@ -34,6 +35,7 @@ app.include_router(profile_router)
 app.include_router(payment_router)
 app.include_router(card_router)
 app.include_router(user_router)
+app.include_router(payout_router)
 
 
 # TODO: To receive Profile creation event from Authentication service
