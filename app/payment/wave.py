@@ -107,7 +107,9 @@ class Flutterwave(object):
 			'account_bank': '',
 			'account_number': '',
 			'amount': '',
-			'currency': ''
+			'currency': '',
+			'narration': '',
+			'reference': ''
 		}
 		"""
 

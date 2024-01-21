@@ -29,3 +29,12 @@ class PaymentValidate(BaseModel):
 class Credit(BaseModel):
     email: EmailStr
     amount: Optional[int]=Field(None, description="Amount to credit user")
+
+
+class TransferModel(BaseModel):
+    rider_email: EmailStr
+    account_bank: str
+    amount: str
+    account_number:  str
+    currency: str
+    narration: str

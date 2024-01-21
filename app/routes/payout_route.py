@@ -27,7 +27,8 @@ def process_payout(
         rider = find_user(rider_email, db)
 
         if not sender or not rider:
-            raise HTTPException(status_code=404, detail="Sender or rider not found")
+            return {"message": "Sender or rider not found"}
+            # raise HTTPException(status_code=404, detail="Sender or rider not found")
 
         if sender.amount < amount:
             return {"message": f"Sender's balance ({sender.amount}) is less than the requested amount ({amount})."}
@@ -51,7 +52,7 @@ def process_payout(
         else:
             # Rollback if success condition is not met
             db.rollback()
-            raise HTTPException(status_code=400, detail="Payment failed due to a non-success condition")
+            return {"success": success, "message": "Payment credit failed"}
 
     except SQLAlchemyError as e:
         db.rollback()

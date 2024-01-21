@@ -74,6 +74,11 @@ class PaymentUtil(object):
 		"""Verify charge if successful"""
 		response = flutterwave.verify_transaction(id)
 		return response.json()
+
+
+	def make_transfer_request(data):
+		response = flutterwave.create_a_transfer(data)
+		return response
 	
 
 

@@ -27,6 +27,7 @@ class UserService:
             db.refresh(user)
 
         except sqlalchemy.exc.IntegrityError:
+            db.rollback()
             raise HTTPException(
                 status_code=409,
                 detail="user already existed"
@@ -35,12 +36,12 @@ class UserService:
             return user
 
     def get_user(email, db: Session):
-        profile = db.query(User).filter(User.email == email).first()
+        user = db.query(User).filter(User.email == email).first()
 
-        if profile is None:
+        if user is None:
             raise HTTPException(status_code=404, detail="User not found")
 
-        return profile
+        return user
 
 
     def credit_user(email, amount_paid, db: Session):
@@ -57,4 +58,18 @@ class UserService:
         except NoResultFound:
             db.rollback()
             return False
+
+    def debit_user(email, amount_paid, db: Session):
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                user.amount -= amount_paid
+                db.commit()
+                db.refresh(user)
+                return True
+
+        except NoResultFound:
+            db.rollback()
+            return False
+
 

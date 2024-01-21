@@ -7,10 +7,13 @@ from app.payment.utils import PaymentUtil
 from app.services.card_service import CardDetailService
 from .card_route import get_card_details
 from ..core.database import get_db
-from app.routes.user_route import credit_user_balance
+from app.routes.user_route import credit_user_balance, get_user, debit_user_balance
 from app.serializer.charge_serializer import charge_card_seriliazer
 from app.serializer.validate_serializer import validate_serializer
 from app.schemas.payment import PaymentCharge, PaymentValidate
+from app.schemas.payment import TransferModel
+from ..models.user import User, UserRole
+from app.serializer.transfer_serilaizer import transfer_data_serializer
 
 from fastapi import HTTPException
 
@@ -55,3 +58,38 @@ async def validate_user_payment(validate_data: PaymentValidate, db: Session = De
 @payment_router.post('/verify', status_code=status.HTTP_201_CREATED, tags=['Payment verification success with id from validation response'])
 async def verify_user_payment(trasanction_id: str):
     return PaymentUtil.make_verification_request(trasanction_id)
+
+
+@payment_router.post('/transfer', status_code=status.HTTP_201_CREATED, tags=['Payment transfer to rider'])
+async def transfer_to_rider(transfer_data: TransferModel, db: Session = Depends(get_db)):
+    json_data = transfer_data_serializer(transfer_data)
+    rider = await get_user(json_data["rider_email"], db)
+
+    if not rider:
+        return {"message": "Rider not found"}
+        # raise HTTPException(status_code=404, detail="Rider not found with the provided email")
+
+    if rider.role != UserRole.RIDER:
+        return {"message": f"Rider with this email {rider.email} has an invalid role."}
+
+    rider_email = rider.email
+    amount_to_transfer = int(json_data["amount"])
+
+    if amount_to_transfer > rider.amount:
+        raise HTTPException(status_code=404, detail="Rider balance not up to amount to transfer")
+
+    # debit rider balance first
+    data = {"amount": amount_to_transfer, "email": rider_email}
+    successfully_debited = await debit_user_balance(data, db)
+    if successfully_debited:
+        logging.info("User balance is debited!!!")
+
+        # Transfer initiation with flutterwave gateway starts here
+        del json_data["rider_email"] #not required field by flutterwave
+        response = PaymentUtil.make_transfer_request(json_data)
+
+        return  response.json()
+
+    else:
+        logging.info(f"User with email {data['email']} is not debited")
+        return {"message": "failed to debit rider and transfer not initiated", "success": False}
