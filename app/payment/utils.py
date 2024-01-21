@@ -42,29 +42,14 @@ class PaymentUtil(object):
 		return response
 
 
-	def make_charge_request(card):
+	def make_charge_request(data):
 		"""Charge Card Request"""
-		data = {
-			"card_number": card.get("card_number"),
-			"cvv": card.get("cvv"),
-			"expiry_month": card.get("expiry_month"),
-			"expiry_year": card.get("expiry_year"),
-			"currency": PaymentUtil.CURRENCY,
-			"amount": card.get("amount"),
-			"fullname": "Arafat Olayiwola",
-			"email": card.get("email"),
-			"tx_ref": PaymentUtil.get_transaction_reference(),
-			"authorization": {
-				"mode": "pin",
-				"pin": card.get("pin")
-			}
-		}
 
 		response = flutterwave.charge_card(data)	
 		if response.status_code in [200, 201]:
 			# execute otp task
 			customer =  response.json()["data"]["customer"]
-			customer["phone"] = customer.get("phone", "08029733525") # add your default number please - very cogent in case
+			customer["phone"] = customer.get("phone", "08029000000") # add your default number please - very cogent in case
 			logging.info(f"Sending Charge OTP to Customer Email at {datetime.now()}")
 			
 			# send charge otp for validation

@@ -6,17 +6,21 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 import sqlalchemy
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import Session
+from datetime import datetime
+from sqlalchemy.exc import NoResultFound
 
-
-from ..models.user import User, Dashboard
+from ..models.user import User
 
 
 class UserService:
-    def create_user(user, db):
+    def create_user(data, db: Session):
         try:
             user = User(
-                email=user.get("email"),
-                date_joined=datetime.now()
+                email=data.get("email"),
+                role=data.get("role", 1),
+                date_joined=datetime.now(),
+                date_credited=None
             )
             db.add(user)
             db.commit()
@@ -30,7 +34,7 @@ class UserService:
         else:
             return user
 
-    def get_user(email, db):
+    def get_user(email, db: Session):
         profile = db.query(User).filter(User.email == email).first()
 
         if profile is None:
@@ -39,31 +43,19 @@ class UserService:
         return profile
 
 
-    def get_user_dashboard(user_id, db):
-        dashboard = db.query(Dashboard).filter(Dashboard.user_id == user_id).first()
-
-        if dashboard is None:
-            raise HTTPException(status_code=404, detail="User dashboard not found")
-
-        return dashboard
-
-
-    def credit_user(email, amount_paid, db):
-
+    def credit_user(email, amount_paid, db: Session):
         try:
-            user = db.query(User).filter(email == email).first()
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                user.amount += amount_paid
+                user.date_credited = datetime.now()
 
-            user.amount += amount_paid
-            user.date_credited = datetime.now()
-            
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+                db.commit()
+                db.refresh(user)
+                return True
+            else:
+                return False
 
-        except sqlalchemy.exc.NoResultFound:
-            raise HTTPException(
-                status_code=404,
-                detail="user not found"
-            )
+        except NoResultFound:
+            return False
 
-        return True

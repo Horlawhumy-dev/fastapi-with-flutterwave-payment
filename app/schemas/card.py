@@ -4,6 +4,7 @@ from typing import Optional, Union
 from pydantic import BaseModel, Field, EmailStr
 
 class CardDetails(BaseModel):
+    email: EmailStr
     card_number: Optional[str] = Field(None, description="User's card number.")
     cvv: Optional[str] = Field(None, description="User's card cvv.")
     expiry_month: Optional[str] = Field(None, description="User's card expiry month")
